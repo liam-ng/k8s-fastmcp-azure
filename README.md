@@ -1,2 +1,3 @@
 # miniKB
-Mini knowledge base for technical notes
+Mini knowledge base for technical notes copied from Obsidian md
+
