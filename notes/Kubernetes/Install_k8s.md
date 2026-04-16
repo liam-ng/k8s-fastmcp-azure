@@ -89,7 +89,9 @@ sudo systemctl status containerd
 
 ## Install kubeadm, kubelet & kubectl
 Reference https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management
+
 Reference https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-runtime
+
 ```bash
 sudo apt-get update
 # apt-transport-https may be a dummy package; if so, you can skip that package
@@ -121,6 +123,7 @@ kubectl cluster-info
 ### If .kube config is missing 
 Error Message: `E0326 00:34:41.352576    4711 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": dial tcp 127.0.0.1:8080: connect: connection refused"
 The connection to the server localhost:8080 was refused - did you specify the right host or port?`
+
 ``` bash
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
@@ -132,6 +135,7 @@ export KUBECONFIG=$HOME/.kube/config
 
 ### Regenerate kube config
 Error Message: `Error from server (Forbidden): nodes is forbidden: User "kubernetes-admin" cannot list resource "nodes" in API group "" at the cluster scope`
+
 ```bash
 sudo rm /etc/kubernetes/admin.conf
 sudo kubeadm init phase kubeconfig admin
@@ -146,6 +150,7 @@ kubectl create clusterrolebinding kubeadm:cluster-admins \
 
 ### If swap is enabled
 By default, the kubelet will not start on a node that has swap enabled.
+
 ```
 sudo swapoff -a
 sudo sed -i '/ swap / s/^/#/' /etc/fstab
@@ -155,6 +160,7 @@ sudo systemctl restart kubelet
 
 ### Reset node for init again
 Reference https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#tear-down
+
 ``` bash
 kubectl drain <node name> --delete-emptydir-data--ignore-daemonsets --force
 
@@ -181,7 +187,8 @@ sudo rm -rf /etc/cni/net.d
 ```
 
 # Result
-![[capture-20260314-1718.png]]
-![[{20EA3050-9D4C-45A4-BC29-CCB0E05B51CB}.png]]
+<img width="1381" height="304" alt="image" src="https://github.com/user-attachments/assets/6af8bee7-e257-43c3-902e-93d4503e4133" />
+<img width="483" height="59" alt="image" src="https://github.com/user-attachments/assets/a85b5885-e804-4bb1-8828-c645f3d41d7b" />
+
 
 ---
