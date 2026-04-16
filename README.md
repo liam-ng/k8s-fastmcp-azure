@@ -1,5 +1,7 @@
 # k8s-fastmcp-azure
 
+<img style="width:20%; height:auto;" alt="ezgif com-animated-gif-maker" src="https://github.com/user-attachments/assets/3ba17ad6-7c18-454b-86d3-a0f4a0b3a68c" />
+
 ## Overview
 
 Technical notes and manifests for running **Ollama**, **Open WebUI**, and **FastMCP** (with Azure integration) on **Kubernetes**, with a focus on **Windows / WSL2** environments.
