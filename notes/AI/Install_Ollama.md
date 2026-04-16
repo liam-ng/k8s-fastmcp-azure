@@ -4,11 +4,13 @@ MCPO is used as a oauth proxy to authenticate user for the functions. This examp
 
 To allow end user or chat user to directly authenticate against the Idp, remote oauth would be the best solution. However, major idp like azure / entra, aws or gcp do not support Dynamic Client Registration. It might be somewhat possible to authenticate user on chat using JWT Token Verification, asking user for their bear token might poses serious security risk and the process would not be optimal experience. 
 
-![[Untitled-2026-03-25-0108 (dark).png]]
+
+<img width="1072" height="480" alt="image" src="https://github.com/user-attachments/assets/555c4941-781b-4eaa-b115-ca141b34ce1c" />
+Credit:  Pamela Fox 
 
 # Prerequisites
-- [Install Kubernetes k8s]
-- [Add NVIDIA Device Plugin to k8s cluster]
+- [notes/Kubernetes/Install_k8s.md](notes/Kubernetes/Install_k8s.md) 
+- [notes/Kubernetes/Install_nvidia_k8s_wsl2.md](notes/Kubernetes/Install_nvidia_k8s_wsl2.md)
 
 ## Test setup with gpu-pod 
 ```
