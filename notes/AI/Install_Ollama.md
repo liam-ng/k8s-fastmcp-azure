@@ -6,7 +6,7 @@ To allow end user or chat user to directly authenticate against the Idp, remote 
 
 
 <img width="1072" height="480" alt="image" src="https://github.com/user-attachments/assets/555c4941-781b-4eaa-b115-ca141b34ce1c" />
-Credit:  Pamela Fox 
+Credit:  [Pamela Fox ](https://blog.pamelafox.org/2026/01/using-on-behalf-of-flow-for-entra-based.html)
 
 # Prerequisites
 - [notes/Kubernetes/Install_k8s.md](notes/Kubernetes/Install_k8s.md) 
