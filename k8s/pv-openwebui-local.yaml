@@ -1,0 +1,84 @@
+# Optional: static hostPath volumes when your cluster has NO default StorageClass provisioner.
+# Adjust paths (host directories must exist or use DirectoryOrCreate). Sizes must match Helm values.
+#
+# 1. kubectl apply -n ollama -f yaml/openwebui-manual-hostpath.yaml
+# 2. In helm-values-open-webui.yaml set:
+#      persistence.existingClaim: openwebui-open-webui
+#      pipelines.persistence.existingClaim: openwebui-pipelines
+#    (PVC names must match your Helm release; with release name "openwebui" they are usually these.)
+# 3. helm upgrade --install openwebui open-webui/open-webui -n ollama -f yaml/helm-values-open-webui.yaml
+#
+# If Helm already created Pending PVCs, delete them before applying (keep pods scaled to 0 or uninstall).
+#
+# Helm ownership (release name open-webui, namespace ollama): required if Helm adopts pre-created PVCs.
+# If claims already exist without these, patch:
+#   kubectl label pvc -n ollama open-webui open-webui-pipelines app.kubernetes.io/managed-by=Helm --overwrite
+#   kubectl annotate pvc -n ollama open-webui open-webui-pipelines meta.helm.sh/release-name=open-webui meta.helm.sh/release-namespace=ollama --overwrite
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: openwebui-app-pv
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /usr/local/open-webui/app
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: openwebui-pipelines-pv
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /usr/local/open-webui/pipelines
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: open-webui
+  namespace: ollama
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: open-webui
+    meta.helm.sh/release-namespace: ollama
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: manual
+  volumeName: openwebui-app-pv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: open-webui-pipelines
+  namespace: ollama
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: open-webui
+    meta.helm.sh/release-namespace: ollama
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: manual
+  volumeName: openwebui-pipelines-pv

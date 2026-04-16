@@ -1,0 +1,16 @@
+{
+    "mcpServers": {
+      "Azure MCP": {
+        "type": "streamable-http",
+        "url": "http://localhost:8000/mcp",
+        "oauth": {
+          "server_url": "http://localhost:8000",
+          "use_loopback": false,
+          "client_metadata": {
+            "client_name": "Azure Manager",
+            "redirect_uris": ["http://localwsl:3030/callback"]
+          }
+        }
+      }
+    }
+}

@@ -1,0 +1,19 @@
+# Builds ConfigMap azure-fastmcp-server from scripts/server.py.
+# Deploy from repository root: kubectl apply -k .
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: fastmcp
+
+resources:
+  - deploy-fastmcp-azure.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: azure-fastmcp-server
+    files:
+      - server.py=scripts/server.py
+      - demo.py=scripts/demo.py
+      - mcpo-config.json=mcpo-config.json

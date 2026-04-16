@@ -1,0 +1,79 @@
+# Values for otwld/ollama (Ollama on Kubernetes).
+# Repo: https://github.com/otwld/ollama-helm
+# Helm registry: https://helm.otwld.com/
+#
+# Example install:
+#   helm repo add otwld https://helm.otwld.com/
+#   helm repo update
+#   helm install ollama otwld/ollama --namespace ollama --create-namespace \
+#     -f yaml/helm-values-ollama-gpu.yaml
+#
+# Prerequisites (cluster-side):
+# - Kubernetes >= 1.26 recommended for stable GPU support (per chart README).
+# - NVIDIA device plugin (or compatible runtime) so nvidia.com/gpu is allocatable.
+# - Nodes with NVIDIA GPUs and matching drivers.
+#
+# Persistence: models and Ollama state use the chart PVC mounted at /root/.ollama (default).
+# The hostPath PV below stores that data on the node at /mnt/e/WSL/models (WSL path).
+# If another workload already uses the same host path (e.g. fastmcp-localai), avoid running
+# both writers against one directory, or use separate host paths.
+
+ollama:
+  gpu:
+    enabled: true
+    type: nvidia
+    number: 1
+    # Uncomment if you use MIG slices instead of whole GPUs:
+    # nvidiaResource: nvidia.com/mig-1g.10gb
+
+  # Pre-pull models at startup (add/remove as needed; startup is slower with many models).
+  models:
+    pull:
+      - google/gemma-4-E4B-it
+      - hf.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF:Q4_K_M
+      - qwen3.5-9b
+
+persistentVolume:
+  enabled: true
+  storageClass: manual
+  size: 50Gi
+  volumeName: ollama-models-pv
+
+extraObjects:
+  - apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      name: ollama-models-pv
+    spec:
+      storageClassName: manual
+      capacity:
+        storage: 50Gi
+      accessModes:
+        - ReadWriteOnce
+      persistentVolumeReclaimPolicy: Retain
+      hostPath:
+        path: /mnt/e/WSL/models
+        type: DirectoryOrCreate
+
+ingress:
+  enabled: true
+  # Required for kubernetes/ingress-nginx: that chart creates IngressClass "nginx" with
+  # default: false and does not watch Ingresses without a class. This must match
+  # controller.ingressClassResource.name (default "nginx") in helm-values-ingress-nginx-hostport.yaml.
+  className: nginx
+  hosts:
+  - host: ollama.localwsl
+    paths:
+      - path: /
+        pathType: Prefix
+
+# Optional: resource requests/limits beyond GPU (chart defaults may be empty).
+resources:
+  limits:
+    nvidia.com/gpu: 1
+    memory: 16Gi
+    cpu: "5"
+  requests:
+    nvidia.com/gpu: 1
+    memory: 8Gi
+    cpu: "2"

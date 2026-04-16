@@ -1,0 +1,277 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-azure
+  namespace: fastmcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-azure
+  template:
+    metadata:
+      labels:
+        app: mcp-azure
+    spec:
+      containers:
+        - name: mcp-azure
+          image: python:3.14.3
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-lc"]
+          args:
+            - |
+              pip install fastmcp[azure] && \
+              pip install aiohttp && \
+              pip install mcpo && \
+              pip install msal && \
+              mcpo --host 0.0.0.0 --port 8000 -- fastmcp run /app/server.py --transport streamable-http
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MCP_SERVER_NAME
+              value: "fastmcp-azure"
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_CLIENT_ID
+                  optional: false
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_CLIENT_SECRET
+                  optional: false
+            - name: AZURE_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_TENANT_ID
+                  optional: false
+          volumeMounts:
+            - name: server-script-folder
+              mountPath: /app
+      volumes:
+        - name: server-script-folder
+          configMap:
+            name: azure-fastmcp-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-demo
+  namespace: fastmcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-demo
+  template:
+    metadata:
+      labels:
+        app: mcp-demo
+    spec:
+      containers:
+        - name: mcp-demo
+          image: python:3.14.3
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-lc"]
+          args:
+            - |
+              pip install fastmcp && \
+              pip install mcpo && \
+              mcpo --host 0.0.0.0 --port 8001 -- fastmcp run /app/demo.py
+          ports:
+            - containerPort: 8001
+          env:
+            - name: MCP_SERVER_NAME
+              value: "fastmcp-azure"
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_CLIENT_ID
+                  optional: false
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_CLIENT_SECRET
+                  optional: false
+            - name: AZURE_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_TENANT_ID
+                  optional: false
+          volumeMounts:
+            - name: server-script-folder
+              mountPath: /app
+      volumes:
+        - name: server-script-folder
+          configMap:
+            name: azure-fastmcp-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcpo
+  namespace: fastmcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcpo
+  template:
+    metadata:
+      labels:
+        app: mcpo
+    spec:
+      containers:
+        - name: mcpo
+          image: python:3.14.3
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-lc"]
+          args:
+            - |
+              pip install mcpo && \
+              mcpo --port 9000 --config /app/mcpo-config.json
+          ports:
+            - containerPort: 3030
+            - containerPort: 9000
+          env:
+            - name: MCP_SERVER_NAME
+              value: "fastmcp-azure"
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_CLIENT_ID
+                  optional: false
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_CLIENT_SECRET
+                  optional: false
+            - name: AZURE_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: AZURE_TENANT_ID
+                  optional: false
+          volumeMounts:
+            - name: server-script-folder
+              mountPath: /app
+      volumes:
+        - name: server-script-folder
+          configMap:
+            name: azure-fastmcp-server
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-azure-svc
+  namespace: fastmcp
+spec:
+  type: ClusterIP
+  selector:
+    app: mcp-azure
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-demo-svc
+  namespace: fastmcp
+spec:
+  type: ClusterIP
+  selector:
+    app: mcp-demo
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcpo-svc
+  namespace: fastmcp
+spec:
+  type: ClusterIP
+  selector:
+    app: mcpo
+  ports:
+    - name: mcpo
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+    - name: mcpo-callback
+      protocol: TCP
+      port: 3030
+      targetPort: 3030
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcpo-azure
+  namespace: fastmcp
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: mcpo.localwsl
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mcpo-svc
+                port:
+                  number: 9000
+          - path: /callback
+            pathType: Prefix
+            backend:
+              service:
+                name: mcpo-svc
+                port:
+                  number: 3030
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-azure
+  namespace: fastmcp
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-pass-params: "proxy_buffering off;"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: mcp.localwsl
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-azure-svc
+                port:
+                  number: 8000
+    
+    - host: demo.localwsl
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-demo-svc
+                port:
+                  number: 8001
+---

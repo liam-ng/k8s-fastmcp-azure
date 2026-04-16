@@ -1,0 +1,32 @@
+# Values for the Kubernetes community NGINX Ingress Controller Helm chart.
+# Chart: https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx
+#
+# Example install:
+#   helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+#   helm repo update
+#   helm install ingress-nginx ingress-nginx/ingress-nginx \
+#     --namespace ingress-nginx --create-namespace \
+#     -f yaml/helm-values-ingress-nginx-hostport.yaml
+#
+# Requires a node pool / scheduling setup where the controller pod can bind
+# host ports 80 and 443 (typically one replica, or DaemonSet-style placement).
+#
+# Routing to Ollama (helm-values-ollama-gpu.yaml):
+# - Ollama Ingress uses host ollama.localwsl and ingress.className: nginx so this controller
+#   picks it up. Resolve the host to the node where the controller runs (e.g. /etc/hosts on
+#   WSL: "<node-ip> ollama.localwsl"), then open http://ollama.localwsl/ (port 80 via hostPort).
+
+controller:
+  hostPort:
+    enabled: true
+    ports:
+      http: 80
+      https: 443
+
+  # hostPort and multiple replicas on the same node conflict; keep a single replica
+  # unless you use DaemonSet or spread replicas across nodes.
+  replicaCount: 1
+
+  service:
+    # Optional: use ClusterIP when traffic enters via hostPort only.
+    type: ClusterIP

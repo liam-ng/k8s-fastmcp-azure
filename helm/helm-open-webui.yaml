@@ -1,0 +1,31 @@
+# Example values.yaml overrides (refer to chart documentation for full schema)
+replicaCount: 1
+
+# -- Ollama: disable if using external model APIs or a separate Ollama deployment
+ollama:
+  enabled: false
+ollamaUrls: ["http://ollama.localwsl"]
+
+# Pipelines enabled by default
+pipelines:
+  enabled: true
+
+persistence:
+  enabled: true
+  provider: local
+
+workload:
+  kind: "Deployment"
+
+# -- Ingress: configure if exposing via an ingress controller
+ingress:
+  enabled: true
+  class: "nginx"
+  host: "ai.localwsl"
+  # tls: true
+  # existingSecret: "openwebui-tls"
+  # annotations:
+  #   nginx.ingress.kubernetes.io/affinity: "cookie"
+  #   nginx.ingress.kubernetes.io/session-cookie-name: "open-webui-session"
+  #   nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+  #   nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
